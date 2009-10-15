@@ -1,0 +1,45 @@
+name "dumbtrajectoryfollower"
+version "0.1"
+
+import_types_from "dfki"
+import_types_from "controldev"
+
+using_library "dumbtrajectoryfollower"
+
+import_types_from 'dumbtrajectoryfollowerTypes.hpp'
+
+task_context "Task" do
+    input_port("trajectory", "dumbtrajectoryfollower/Trajectory").
+        doc "Position and orientation of the Robot"
+
+    input_port("pose", "DFKI/Pose3D").
+        doc "Position and orientation where the Robot should be"
+
+    output_port("motionCommand", "controldev/MotionCommand").
+        doc "Drive command that should steer the robot to the target Pose"
+
+    port_driven :trajectory
+    port_driven :pose
+    needs_configuration
+end
+
+static_deployment do
+    dtf = task("Task").
+    	     triggered
+
+    # control_dev       = task('hbridge_ControlDev', 'controldev::Remote').
+    #     triggered
+
+    # test_controller   = task("TestController")
+    # simple_controller = task("SimpleController").
+    #     periodic(0.001)
+    # two_phase_controller = task("TwoPhaseController").
+    #     periodic(0.001)
+
+    add_default_logger
+
+    if !corba_enabled?
+        browse dtf
+    end
+end
+

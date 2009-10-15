@@ -36,16 +36,29 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 {
     DFKI::Pose3D pose;
     DFKI::Pose3D targetPose;
-    bool gotTarget = false;
+    Trajectory trajectory;
+    bool gotTrajectory = false;
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> > trajcetoryDriver;
     
-    if(gotTarget = _targetPose.read(targetPose)) {
-	if(isPortUpdated(_targetPose)) {
-	    dtf.setTargetPose(targetPose.position.getEigenType(), targetPose.orientation.getEigenType());
+    if(gotTrajectory = _trajectory.read(trajectory)) {
+	if(isPortUpdated(_trajectory)) {
+	    //convert to driver format
+	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.trajectory.begin(); it != trajectory.trajectory.end(); it++) {
+		
+		trajcetoryDriver.push_back(std::pair<Eigen::Vector3d, Eigen::Quaterniond> (it->position.getEigenType(), it->orientation.getEigenType()));
+	    }
+	    dtf.setTrajectory(trajcetoryDriver);
 	}
     }
     
-    if(_pose.read(pose) && gotTarget) {
-	dtf.setPose(pose.position.getEigenType(), pose.orientation.getEigenType());
+    if(_pose.read(pose) && gotTrajectory) {
+	
+	Eigen::Vector3d position = pose.position.getEigenType();
+	Eigen::Quaterniond orientation = pose.orientation.getEigenType();
+	
+	dtf.setPose(position, orientation);
+	
+	dtf.testSetNextWaypoint();
 	
 	controldev::MotionCommand mc;
 	dtf.getMovementCommand(mc.translation, mc.rotation);
