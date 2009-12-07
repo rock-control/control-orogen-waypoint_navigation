@@ -1,7 +1,7 @@
 #include "Task.hpp"
 
 #include <rtt/NonPeriodicActivity.hpp>
-
+#include <dumbtrajectoryfollower.hpp>
 
 using namespace dumbtrajectoryfollower;
 
@@ -13,6 +13,8 @@ RTT::NonPeriodicActivity* Task::getNonPeriodicActivity()
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
+    dtf = new DumbTrajectoryFollower();
+    gotTrajectory = false;
 }
 
 
@@ -34,34 +36,38 @@ bool Task::configureHook()
 
 void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 {
-    DFKI::Pose3D pose;
-    DFKI::Pose3D targetPose;
+    DFKI::SystemState pose;
     Trajectory trajectory;
-    bool gotTrajectory = false;
-    std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> > trajcetoryDriver;
+    std::vector<DumbTrajectoryFollower::Pose *> trajcetoryDriver;
     
-    if(gotTrajectory = _trajectory.read(trajectory)) {
+    if(_trajectory.read(trajectory)) {
 	if(isPortUpdated(_trajectory)) {
 	    //convert to driver format
-	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.trajectory.begin(); it != trajectory.trajectory.end(); it++) {
-		
-		trajcetoryDriver.push_back(std::pair<Eigen::Vector3d, Eigen::Quaterniond> (it->position.getEigenType(), it->orientation.getEigenType()));
+	    std::cerr << "DTF: got " << trajectory.points.size() << " points in trajectory" << std::endl;
+	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.points.begin(); it != trajectory.points.end(); it++) {
+		DumbTrajectoryFollower::Pose *pose_intern = new DumbTrajectoryFollower::Pose();
+		pose_intern->orientation = pose.orientation.getEigenType();
+		pose_intern->position = pose.position.getEigenType();
+		trajcetoryDriver.push_back(pose_intern);
 	    }
-	    dtf.setTrajectory(trajcetoryDriver);
+	    dtf->setTrajectory(trajcetoryDriver);
+	    gotTrajectory = true;
 	}
     }
     
-    if(_pose.read(pose) && gotTrajectory) {
-	
+    if(_pose.read(pose) && gotTrajectory) 
+    {
 	Eigen::Vector3d position = pose.position.getEigenType();
 	Eigen::Quaterniond orientation = pose.orientation.getEigenType();
 	
-	dtf.setPose(position, orientation);
+	dtf->setPose(position, orientation);
 	
-	dtf.testSetNextWaypoint();
+	dtf->testSetNextWaypoint();
 	
 	controldev::MotionCommand mc;
-	dtf.getMovementCommand(mc.translation, mc.rotation);
+	dtf->getMovementCommand(mc.translation, mc.rotation);
+	std::cout << "DTF: New Movement command tv " << mc.translation << " rv " << mc.rotation << std::endl;
+	
 	_motionCommand.write(mc);
     }
     

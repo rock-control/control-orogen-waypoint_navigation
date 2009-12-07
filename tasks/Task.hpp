@@ -2,21 +2,22 @@
 #define DUMBTRAJECTORYFOLLOWER_TASK_TASK_HPP
 
 #include "dumbtrajectoryfollower/TaskBase.hpp"
-#include <dumbtrajectoryfollower.hpp>
+
 
 namespace RTT
 {
     class NonPeriodicActivity;
 }
 
+class DumbTrajectoryFollower;
 
 namespace dumbtrajectoryfollower {
     class Task : public TaskBase
     {
 	friend class TaskBase;
     protected:
-	DumbTrajectoryFollower dtf;
-    
+	DumbTrajectoryFollower *dtf;
+	bool gotTrajectory;
 
     public:
         Task(std::string const& name = "dumbtrajectoryfollower::Task");

@@ -9,7 +9,7 @@
 namespace dumbtrajectoryfollower {
 
 struct Trajectory {
-    std::vector<DFKI::Pose3D> trajectory;
+    std::vector<DFKI::Pose3D> points;
 };
 
 }
