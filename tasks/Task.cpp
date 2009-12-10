@@ -13,8 +13,7 @@ RTT::NonPeriodicActivity* Task::getNonPeriodicActivity()
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
-    dtf = new DumbTrajectoryFollower();
-    gotTrajectory = false;
+    dtf = NULL;
 }
 
 
@@ -29,19 +28,27 @@ bool Task::configureHook()
 {
     return true;
 }
-// bool Task::startHook()
-// {
-//     return true;
-// }
+
+bool Task::startHook()
+{
+    if(dtf) {
+	delete dtf;
+    }
+    dtf = new DumbTrajectoryFollower();
+    dtf->setTrajectory(trajcetoryDriver);
+    return true;
+}
 
 void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 {
     DFKI::SystemState pose;
     Trajectory trajectory;
-    std::vector<DumbTrajectoryFollower::Pose *> trajcetoryDriver;
     
     if(_trajectory.read(trajectory)) {
 	if(isPortUpdated(_trajectory)) {
+	    //note, dtf deletes the Pose* for us
+	    trajcetoryDriver.clear();
+	    
 	    //convert to driver format
 	    std::cerr << "DTF: got " << trajectory.points.size() << " points in trajectory" << std::endl;
 	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.points.begin(); it != trajectory.points.end(); it++) {
@@ -51,11 +58,10 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 		trajcetoryDriver.push_back(pose_intern);
 	    }
 	    dtf->setTrajectory(trajcetoryDriver);
-	    gotTrajectory = true;
 	}
     }
     
-    if(_pose.read(pose) && gotTrajectory) 
+    if(_pose.read(pose)) 
     {
 	Eigen::Vector3d position = pose.position.getEigenType();
 	Eigen::Quaterniond orientation = pose.orientation.getEigenType();

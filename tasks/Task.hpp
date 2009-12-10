@@ -2,7 +2,7 @@
 #define DUMBTRAJECTORYFOLLOWER_TASK_TASK_HPP
 
 #include "dumbtrajectoryfollower/TaskBase.hpp"
-
+#include "dumbtrajectoryfollower.hpp"
 
 namespace RTT
 {
@@ -16,8 +16,10 @@ namespace dumbtrajectoryfollower {
     {
 	friend class TaskBase;
     protected:
+	///Instance of the dumbTrajectoryFollower driver
 	DumbTrajectoryFollower *dtf;
-	bool gotTrajectory;
+	///Trajectory in the format of the driver
+	std::vector<DumbTrajectoryFollower::Pose *> trajcetoryDriver;
 
     public:
         Task(std::string const& name = "dumbtrajectoryfollower::Task");
@@ -44,7 +46,7 @@ namespace dumbtrajectoryfollower {
          * stay in Stopped. Otherwise, it goes into Running and updateHook()
          * will be called.
          */
-        // bool startHook();
+        bool startHook();
 
         /** This hook is called by Orocos when the component is in the Running
          * state, at each activity step. Here, the activity gives the "ticks"
