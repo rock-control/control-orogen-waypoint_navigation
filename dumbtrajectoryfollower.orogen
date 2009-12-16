@@ -9,6 +9,21 @@ using_library "dumbtrajectoryfollower"
 import_types_from 'dumbtrajectoryfollowerTypes.hpp'
 
 task_context "Task" do
+    property("pointReachedDistanceX", "double").
+            doc "if distances on x is smaller than this value, point counts as reached"
+
+    property("pointReachedDistanceY", "double").
+            doc "if distances on x is smaller than this value, point counts as reached"
+
+    property("pointReachedDistanceZ", "double").
+            doc "if distances on x is smaller than this value, point counts as reached"
+
+    property("maxTv", "double").
+            doc "maximum tv speed"
+
+    property("maxRv", "double").
+            doc "maximum rc speed"
+
     input_port("trajectory", "dumbtrajectoryfollower/Trajectory").
         doc "Trajectory the robot should follow"
 
@@ -17,6 +32,9 @@ task_context "Task" do
 
     output_port("motionCommand", "controldev/MotionCommand").
         doc "Drive command that should steer the robot to the target Pose"
+
+    output_port("usedTrajectory", "dumbtrajectoryfollower/Trajectory").
+        doc "Trajectory that is currently used"
 
     needs_configuration
     port_driven

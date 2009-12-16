@@ -13,7 +13,7 @@ RTT::NonPeriodicActivity* Task::getNonPeriodicActivity()
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
-    dtf = NULL;
+    dtf = NULL;   
 }
 
 
@@ -26,6 +26,14 @@ Task::Task(std::string const& name)
 
 bool Task::configureHook()
 {
+    //defaults
+    _pointReachedDistanceX.set(0.2);
+    _pointReachedDistanceY.set(0.2);
+    _pointReachedDistanceZ.set(5.0);
+
+    _maxTv.set(0.6);
+    _maxRv.set(1.5);
+    
     return true;
 }
 
@@ -44,8 +52,8 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
     DFKI::SystemState pose;
     Trajectory trajectory;
     
-    if(_trajectory.read(trajectory)) {
-	if(isPortUpdated(_trajectory)) {
+    if(isPortUpdated(_trajectory)) {
+	if(_trajectory.read(trajectory)) {
 	    //note, dtf deletes the Pose* for us
 	    trajcetoryDriver.clear();
 	    
@@ -53,16 +61,17 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	    std::cerr << "DTF: got " << trajectory.points.size() << " points in trajectory" << std::endl;
 	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.points.begin(); it != trajectory.points.end(); it++) {
 		DumbTrajectoryFollower::Pose *pose_intern = new DumbTrajectoryFollower::Pose();
+		pose_intern->covariancePosition = Eigen::Matrix3d::Identity();
+		pose_intern->covariancePosition(0,0) = _pointReachedDistanceX.get() * _pointReachedDistanceX.get();
+		pose_intern->covariancePosition(1,1) = _pointReachedDistanceY.get() * _pointReachedDistanceY.get();
+		pose_intern->covariancePosition(2,2) = _pointReachedDistanceZ.get() * _pointReachedDistanceZ.get();
 		pose_intern->orientation = it->orientation.getEigenType();
 		pose_intern->position = it->position.getEigenType();
-		//HACK this specifys, that the position is "reached" if we are in a 0.2m radius to it
-		//note, the robot will also stop if the covariance of the pose is bigger than (0.2)^2
-		pose_intern->covariancePosition = Eigen::Matrix3d::Identity() * 0.04; 
-		pose_intern->orientation = pose.orientation.getEigenType();
-		pose_intern->position = pose.position.getEigenType();
+		
 		trajcetoryDriver.push_back(pose_intern);
-	    }
+	    }		
 	    dtf->setTrajectory(trajcetoryDriver);
+	    _usedTrajectory.write(trajectory);
 	}
     }
     
@@ -82,6 +91,18 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	dtf->getMovementCommand(mc.translation, mc.rotation);
 	std::cout << "DTF: New Movement command tv " << mc.translation << " rv " << mc.rotation << std::endl;
 	
+	if(mc.translation > _maxTv.get())
+	    mc.translation = _maxTv.get();
+	
+	if(mc.translation < -_maxTv.get())
+	    mc.translation = -_maxTv.get();
+
+	if(mc.rotation > _maxRv.get())
+	    mc.rotation = _maxRv.get();
+
+	if(mc.rotation < -_maxRv.get())
+	    mc.rotation = -_maxRv.get();
+
 	_motionCommand.write(mc);
     }
     
