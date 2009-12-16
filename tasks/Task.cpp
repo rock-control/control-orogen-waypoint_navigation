@@ -53,6 +53,8 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	    std::cerr << "DTF: got " << trajectory.points.size() << " points in trajectory" << std::endl;
 	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.points.begin(); it != trajectory.points.end(); it++) {
 		DumbTrajectoryFollower::Pose *pose_intern = new DumbTrajectoryFollower::Pose();
+		pose_intern->orientation = it->orientation.getEigenType();
+		pose_intern->position = it->position.getEigenType();
 		//HACK this specifys, that the position is "reached" if we are in a 0.2m radius to it
 		//note, the robot will also stop if the covariance of the pose is bigger than (0.2)^2
 		pose_intern->covariancePosition = Eigen::Matrix3d::Identity() * 0.04; 
