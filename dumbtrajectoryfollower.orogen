@@ -36,6 +36,8 @@ task_context "Task" do
     output_port("usedTrajectory", "dumbtrajectoryfollower/Trajectory").
         doc "Trajectory that is currently used"
 
+    output_port("currentWaypoint", "dumbtrajectoryfollower/Waypoint")
+
     needs_configuration
     port_driven
 end

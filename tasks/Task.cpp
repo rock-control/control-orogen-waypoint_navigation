@@ -85,7 +85,16 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	
 	dtf->setPose(poseDTF);
 	
-	dtf->testSetNextWaypoint();
+	if(dtf->testSetNextWaypoint()) 
+	{
+	    std::vector<DumbTrajectoryFollower::Pose *>::const_iterator wpi = dtf->getCurrentWaypoint();
+	    Waypoint wp;
+	    wp.point.position = (*wpi)->position;
+	    wp.point.orientation = (*wpi)->orientation;
+	    wp.covarince = (*wpi)->covariancePosition;
+	    
+	    _currentWaypoint.write(wp);
+	}
 	
 	controldev::MotionCommand mc;
 	dtf->getMovementCommand(mc.translation, mc.rotation);
