@@ -27,8 +27,8 @@ Task::Task(std::string const& name)
 bool Task::configureHook()
 {
     //defaults
-    _pointReachedDistanceX.set(0.2);
-    _pointReachedDistanceY.set(0.2);
+    _pointReachedDistanceX.set(1.2);
+    _pointReachedDistanceY.set(1.2);
     _pointReachedDistanceZ.set(5.0);
 
     _maxTv.set(0.6);
@@ -114,7 +114,6 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 
 	_motionCommand.write(mc);
     }
-    
 }
 
 // void Task::errorHook()
