@@ -1,9 +1,10 @@
 #include "Task.hpp"
 
 #include <rtt/NonPeriodicActivity.hpp>
-#include <dumbtrajectoryfollower.hpp>
+#include <WaypointNavigation.hpp>
+#include <base/wrappers/waypoint.h>
 
-using namespace dumbtrajectoryfollower;
+using namespace waypoint_navigation;
 
 
 RTT::NonPeriodicActivity* Task::getNonPeriodicActivity()
@@ -42,15 +43,15 @@ bool Task::startHook()
     if(dtf) {
 	delete dtf;
     }
-    dtf = new DumbTrajectoryFollower();
+    dtf = new WaypointNavigation();
     dtf->setTrajectory(trajcetoryDriver);
     return true;
 }
 
 void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 {
-    DFKI::SystemState pose;
-    Trajectory trajectory;
+    wrappers::samples::RigidBodyState pose;
+    std::vector<wrappers::Waypoint> trajectory;
     
     if(isPortUpdated(_trajectory)) {
 	if(_trajectory.read(trajectory)) {
@@ -58,17 +59,11 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	    trajcetoryDriver.clear();
 	    
 	    //convert to driver format
-	    std::cerr << "DTF: got " << trajectory.points.size() << " points in trajectory" << std::endl;
-	    for(std::vector<DFKI::Pose3D>::iterator it = trajectory.points.begin(); it != trajectory.points.end(); it++) {
-		DumbTrajectoryFollower::Pose *pose_intern = new DumbTrajectoryFollower::Pose();
-		pose_intern->covariancePosition = Eigen::Matrix3d::Identity();
-		pose_intern->covariancePosition(0,0) = _pointReachedDistanceX.get() * _pointReachedDistanceX.get();
-		pose_intern->covariancePosition(1,1) = _pointReachedDistanceY.get() * _pointReachedDistanceY.get();
-		pose_intern->covariancePosition(2,2) = _pointReachedDistanceZ.get() * _pointReachedDistanceZ.get();
-		pose_intern->orientation = it->orientation.getEigenType();
-		pose_intern->position = it->position.getEigenType();
-		
-		trajcetoryDriver.push_back(pose_intern);
+	    std::cerr << "DTF: got " << trajectory.size() << " points in trajectory" << std::endl;
+	    for(std::vector<wrappers::Waypoint>::iterator it = trajectory.begin(); it != trajectory.end(); it++) {
+		base::Waypoint *wp_intern = new base::Waypoint();
+		*wp_intern = *it;		
+		trajcetoryDriver.push_back(wp_intern);
 	    }		
 	    dtf->setTrajectory(trajcetoryDriver);
 	    _usedTrajectory.write(trajectory);
@@ -77,22 +72,14 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
     
     if(_pose.read(pose)) 
     {
-	DumbTrajectoryFollower::Pose poseDTF;
-	poseDTF.position = pose.position.getEigenType();
-	poseDTF.orientation = pose.orientation.getEigenType();
-	poseDTF.covariancePosition = pose.cov_position.getEigenType();
-	poseDTF.covarianceOrientation = pose.cov_orientation.getEigenType();
+	base::samples::RigidBodyState rbs = pose;	
 	
-	dtf->setPose(poseDTF);
+	dtf->setPose(rbs);
 	
 	if(dtf->testSetNextWaypoint()) 
 	{
-	    std::vector<DumbTrajectoryFollower::Pose *>::const_iterator wpi = dtf->getCurrentWaypoint();
-	    Waypoint wp;
-	    wp.point.position = (*wpi)->position;
-	    wp.point.orientation = (*wpi)->orientation;
-	    wp.covarince = (*wpi)->covariancePosition;
-	    
+	    std::vector<base::Waypoint *>::const_iterator wpi = dtf->getCurrentWaypoint();
+	    wrappers::Waypoint wp = **wpi;;	    
 	    _currentWaypoint.write(wp);
 	}
 	

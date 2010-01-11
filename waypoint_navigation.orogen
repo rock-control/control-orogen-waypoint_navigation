@@ -1,12 +1,12 @@
-name "dumbtrajectoryfollower"
+name "waypoint_navigation"
 version "0.1"
 
-import_types_from "dfki"
+import_types_from "base"
 import_types_from "controldev"
 
-using_library "dumbtrajectoryfollower"
 
-import_types_from 'dumbtrajectoryfollowerTypes.hpp'
+using_library "waypoint_navigation"
+
 
 task_context "Task" do
     property("pointReachedDistanceX", "double").
@@ -24,19 +24,19 @@ task_context "Task" do
     property("maxRv", "double").
             doc "maximum rc speed"
 
-    input_port("trajectory", "dumbtrajectoryfollower/Trajectory").
+    input_port("trajectory", "/std/vector</wrappers/Waypoint>").
         doc "Trajectory the robot should follow"
 
-    input_port("pose", "/DFKI/SystemState").
+    input_port("pose", "wrappers/samples/RigidBodyState").
         doc "Position and orientation of the Robot"
 
     output_port("motionCommand", "controldev/MotionCommand").
         doc "Drive command that should steer the robot to the target Pose"
 
-    output_port("usedTrajectory", "dumbtrajectoryfollower/Trajectory").
+    output_port("usedTrajectory", "/std/vector</wrappers/Waypoint>").
         doc "Trajectory that is currently used"
 
-    output_port("currentWaypoint", "dumbtrajectoryfollower/Waypoint")
+    output_port("currentWaypoint", "wrappers/Waypoint")
 
     needs_configuration
     port_driven

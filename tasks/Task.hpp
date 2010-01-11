@@ -1,28 +1,30 @@
 #ifndef DUMBTRAJECTORYFOLLOWER_TASK_TASK_HPP
 #define DUMBTRAJECTORYFOLLOWER_TASK_TASK_HPP
 
-#include "dumbtrajectoryfollower/TaskBase.hpp"
-#include "dumbtrajectoryfollower.hpp"
+#include "waypoint_navigation/TaskBase.hpp"
+#include <WaypointNavigation.hpp>
+#include <base/waypoint.h>
 
 namespace RTT
 {
     class NonPeriodicActivity;
 }
 
-class DumbTrajectoryFollower;
 
-namespace dumbtrajectoryfollower {
+
+
+namespace waypoint_navigation {
     class Task : public TaskBase
     {
 	friend class TaskBase;
     protected:
 	///Instance of the dumbTrajectoryFollower driver
-	DumbTrajectoryFollower *dtf;
+	WaypointNavigation *dtf;
 	///Trajectory in the format of the driver
-	std::vector<DumbTrajectoryFollower::Pose *> trajcetoryDriver;
+	std::vector<base::Waypoint *> trajcetoryDriver;
 
     public:
-        Task(std::string const& name = "dumbtrajectoryfollower::Task");
+        Task(std::string const& name = "WaypointNavigation::Task");
 
         RTT::NonPeriodicActivity* getNonPeriodicActivity();
 
