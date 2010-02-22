@@ -99,7 +99,7 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	if(mc.rotation < -_maxRv.get())
 	    mc.rotation = -_maxRv.get();
 
-	_motionCommand.write(mc);
+	_motion_command.write(mc);
     }
 }
 
