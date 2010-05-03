@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<package>
+  <depend package="control/waypoint_navigation"/>
+  <depend package="modules/controldev"/>
+  <depend package="orocos/base"/>
+  <depend package="orocos/orogen"/>
+  <depend package="orocos/rtt"/>
+</package>
