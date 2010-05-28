@@ -83,7 +83,7 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 	    _currentWaypoint.write(wp);
 	}
 	
-	controldev::MotionCommand mc;
+	base::MotionCommand2D mc;
 	dtf->getMovementCommand(mc.translation, mc.rotation);
 	std::cout << "DTF: New Movement command tv " << mc.translation << " rv " << mc.rotation << std::endl;
 	
