@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <package>
   <depend package="control/waypoint_navigation"/>
-  <depend package="orocos/base"/>
-  <depend package="orocos/orogen"/>
-  <depend package="orocos/rtt"/>
+  <depend package="modules/base"/>
+  <depend package="orogen"/>
 </package>

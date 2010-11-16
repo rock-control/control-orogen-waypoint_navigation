@@ -1,25 +1,13 @@
 #include "Task.hpp"
-
-#include <rtt/NonPeriodicActivity.hpp>
 #include <WaypointNavigation.hpp>
-#include <base/wrappers/waypoint.h>
 
 using namespace waypoint_navigation;
-
-
-RTT::NonPeriodicActivity* Task::getNonPeriodicActivity()
-{ return dynamic_cast< RTT::NonPeriodicActivity* >(getActivity().get()); }
-
 
 Task::Task(std::string const& name)
     : TaskBase(name)
 {
-    dtf = NULL;   
+    follower = NULL;   
 }
-
-
-
-
 
 /// The following lines are template definitions for the various state machine
 // hooks defined by Orocos::RTT. See Task.hpp for more detailed
@@ -28,64 +16,47 @@ Task::Task(std::string const& name)
 bool Task::configureHook()
 {
     //defaults
-    _pointReachedDistanceX.set(1.2);
-    _pointReachedDistanceY.set(1.2);
-    _pointReachedDistanceZ.set(5.0);
-
     _maxTv.set(0.6);
     _maxRv.set(1.5);
-    
+
+    follower = new WaypointNavigation();
+    trajectory.clear();
     return true;
 }
 
-bool Task::startHook()
-{
-    if(dtf) {
-	delete dtf;
-    }
-    dtf = new WaypointNavigation();
-    dtf->setTrajectory(trajcetoryDriver);
-    return true;
-}
+// bool Task::startHook()
+// {
+//     return true;
+// }
 
-void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
+void Task::updateHook()
 {
-    wrappers::samples::RigidBodyState pose;
-    std::vector<wrappers::Waypoint> trajectory;
-    
-    if(isPortUpdated(_trajectory)) {
-	if(_trajectory.read(trajectory)) {
-	    //note, dtf deletes the Pose* for us
-	    trajcetoryDriver.clear();
-	    
-	    //convert to driver format
-	    std::cerr << "DTF: got " << trajectory.size() << " points in trajectory" << std::endl;
-	    for(std::vector<wrappers::Waypoint>::iterator it = trajectory.begin(); it != trajectory.end(); it++) {
-		base::Waypoint *wp_intern = new base::Waypoint();
-		*wp_intern = *it;		
-		trajcetoryDriver.push_back(wp_intern);
-	    }		
-	    dtf->setTrajectory(trajcetoryDriver);
-	    _usedTrajectory.write(trajectory);
-	}
+    if(_trajectory.flush(trajectory) != RTT::NoData) {
+        //convert to driver format
+        std::cerr << "DTF: got " << trajectory.size() << " points in trajectory" << std::endl;
+
+        std::vector<base::Waypoint*> waypoints;
+        for (std::vector<base::Waypoint>::const_iterator it = trajectory.begin();
+                it != trajectory.end(); ++it)
+        {
+            waypoints.push_back(new base::Waypoint(*it));
+        }
+        follower->setTrajectory(waypoints);
     }
     
-    if(_pose.read(pose)) 
+    base::samples::RigidBodyState pose;
+    if (!trajectory.empty() && _pose.flush(pose) != RTT::NoData)
     {
-	base::samples::RigidBodyState rbs = pose;	
+	follower->setPose(pose);
 	
-	dtf->setPose(rbs);
-	
-	if(dtf->testSetNextWaypoint()) 
+	if(follower->testSetNextWaypoint()) 
 	{
-	    std::vector<base::Waypoint *>::const_iterator wpi = dtf->getCurrentWaypoint();
-	    wrappers::Waypoint wp = **wpi;;	    
-	    _currentWaypoint.write(wp);
+	    std::vector<base::Waypoint *>::const_iterator wpi = follower->getCurrentWaypoint();
+	    _currentWaypoint.write(**wpi);
 	}
 	
 	base::MotionCommand2D mc;
-	dtf->getMovementCommand(mc.translation, mc.rotation);
-	std::cout << "DTF: New Movement command tv " << mc.translation << " rv " << mc.rotation << std::endl;
+	follower->getMovementCommand(mc.translation, mc.rotation);
 	
 	if(mc.translation > _maxTv.get())
 	    mc.translation = _maxTv.get();
@@ -109,7 +80,8 @@ void Task::updateHook(std::vector<RTT::PortInterface*> const& updated_ports)
 // void Task::stopHook()
 // {
 // }
-// void Task::cleanupHook()
-// {
-// }
+void Task::cleanupHook()
+{
+    delete follower;
+}
 

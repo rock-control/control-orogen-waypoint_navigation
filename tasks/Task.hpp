@@ -2,31 +2,21 @@
 #define DUMBTRAJECTORYFOLLOWER_TASK_TASK_HPP
 
 #include "waypoint_navigation/TaskBase.hpp"
-#include <WaypointNavigation.hpp>
 #include <base/waypoint.h>
 
-namespace RTT
-{
-    class NonPeriodicActivity;
-}
-
-
-
-
+class WaypointNavigation;
 namespace waypoint_navigation {
     class Task : public TaskBase
     {
 	friend class TaskBase;
     protected:
 	///Instance of the dumbTrajectoryFollower driver
-	WaypointNavigation *dtf;
+	WaypointNavigation *follower;
 	///Trajectory in the format of the driver
-	std::vector<base::Waypoint *> trajcetoryDriver;
+	std::vector<base::Waypoint> trajectory;
 
     public:
         Task(std::string const& name = "WaypointNavigation::Task");
-
-        RTT::NonPeriodicActivity* getNonPeriodicActivity();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -48,7 +38,7 @@ namespace waypoint_navigation {
          * stay in Stopped. Otherwise, it goes into Running and updateHook()
          * will be called.
          */
-        bool startHook();
+        // bool startHook();
 
         /** This hook is called by Orocos when the component is in the Running
          * state, at each activity step. Here, the activity gives the "ticks"
@@ -69,7 +59,7 @@ namespace waypoint_navigation {
          * this call. If the trigger is caused by something different (for
          * instance, a periodic update), then this set is empty.
          */
-        void updateHook(std::vector<RTT::PortInterface*> const& updated_ports);
+        void updateHook();
         
 
         /** This hook is called by Orocos when the component is in the
@@ -89,7 +79,7 @@ namespace waypoint_navigation {
          * from Stopped to PreOperational, requiring the call to configureHook()
          * before calling start() again.
          */
-        // void cleanupHook();
+        void cleanupHook();
     };
 }
 

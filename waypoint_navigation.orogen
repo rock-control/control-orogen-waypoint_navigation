@@ -7,34 +7,23 @@ using_library "waypoint_navigation"
 
 
 task_context "Task" do
-    property("pointReachedDistanceX", "double").
-            doc "if distances on x is smaller than this value, point counts as reached"
-
-    property("pointReachedDistanceY", "double").
-            doc "if distances on x is smaller than this value, point counts as reached"
-
-    property("pointReachedDistanceZ", "double").
-            doc "if distances on x is smaller than this value, point counts as reached"
-
     property("maxTv", "double").
-            doc "maximum tv speed"
+            doc "maximum forward speed, in m/s"
 
     property("maxRv", "double").
-            doc "maximum rc speed"
+            doc "maximum rotational speed, in rad/s"
 
-    input_port("trajectory", "/std/vector</wrappers/Waypoint>").
+    input_port("trajectory", "/std/vector</base/Waypoint>").
         doc "Trajectory the robot should follow"
 
-    input_port("pose", "wrappers/samples/RigidBodyState").
+    input_port("pose", "base/samples/RigidBodyState").
         doc "Position and orientation of the Robot"
 
     output_port("motion_command", "base/MotionCommand2D").
         doc "Drive command that should steer the robot to the target Pose"
 
-    output_port("usedTrajectory", "/std/vector</wrappers/Waypoint>").
-        doc "Trajectory that is currently used"
-
-    output_port("currentWaypoint", "wrappers/Waypoint")
+    output_port("currentWaypoint", "base/Waypoint").
+        doc "the waypoint towards which we are currently going"
 
     needs_configuration
     port_driven
