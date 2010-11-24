@@ -31,7 +31,7 @@ bool Task::configureHook()
 
 void Task::updateHook()
 {
-    if(_trajectory.flush(trajectory) != RTT::NoData) {
+    if(_trajectory.readNewest(trajectory) != RTT::NoData) {
         //convert to driver format
         std::cerr << "DTF: got " << trajectory.size() << " points in trajectory" << std::endl;
 
@@ -45,7 +45,7 @@ void Task::updateHook()
     }
     
     base::samples::RigidBodyState pose;
-    if (!trajectory.empty() && _pose.flush(pose) != RTT::NoData)
+    if (!trajectory.empty() && _pose.readNewest(pose) != RTT::NoData)
     {
 	follower->setPose(pose);
 	
