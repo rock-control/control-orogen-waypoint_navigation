@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
   <depend package="control/waypoint_navigation"/>
-  <depend package="modules/base"/>
+  <depend package="base/orogen/types"/>
   <depend package="orogen"/>
 </package>
