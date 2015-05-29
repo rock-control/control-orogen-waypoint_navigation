@@ -1,5 +1,6 @@
 #include "Task.hpp"
 #include <WaypointNavigation.hpp>
+#include <base/commands/Motion2D.hpp>
 
 using namespace waypoint_navigation;
 
@@ -55,7 +56,7 @@ void Task::updateHook()
 	    _currentWaypoint.write(**wpi);
 	}
 	
-	base::MotionCommand2D mc;
+	base::commands::Motion2D mc;
 	follower->getMovementCommand(mc.translation, mc.rotation);
 	
 	if(mc.translation > _maxTv.get())
